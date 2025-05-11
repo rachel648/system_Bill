@@ -1,0 +1,52 @@
+.container {
+  padding: 20px;
+  text-align: center;
+}
+
+.heading {
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+.card-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.card {
+  width: 200px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.basic-card {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.intermediate-card {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+
+.big-card {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+}
+
+.mega-card {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
