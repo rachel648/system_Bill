@@ -1,0 +1,76 @@
+/* Overall container for layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar navigation */
+.navigation {
+  width: 220px;
+  background-color: #2c3e50;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.navigation h3 {
+  color: #ecf0f1;
+  margin-bottom: 20px;
+}
+
+.navigation ul {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+}
+
+.navigation li {
+  margin: 10px 0;
+  width: 100%;
+  text-align: center;
+}
+
+/* Unique colored links */
+.link-wifi {
+  background-color: #3498db; /* Blue */
+  color: white;
+  padding: 10px;
+  display: block;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.link-hotspot {
+  background-color: #e67e22; /* Orange */
+  color: white;
+  padding: 10px;
+  display: block;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.link-receipts {
+  background-color: #16a085; /* Teal */
+  color: white;
+  padding: 10px;
+  display: block;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.link-wifi:hover,
+.link-hotspot:hover,
+.link-receipts:hover {
+  opacity: 0.85;
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  background-color: #f4f6f8;
+  overflow-y: auto;
+}
+
