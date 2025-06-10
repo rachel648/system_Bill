@@ -29,42 +29,47 @@ const Packages = () => {
 
   const formatPhoneNumber = (phone) => {
     let formatted = phone.trim();
-    formatted = formatted.replace(/\D/g, '');
+    formatted = formatted.replace(/\D/g, ''); // Remove all non-digit characters
     
-    if (formatted.startsWith('0')) {
-      return '254' + formatted.substring(1);
-    } else if (formatted.startsWith('254')) {
+    if (formatted.startsWith('254') && formatted.length === 12) {
       return formatted;
-    } else if (formatted.length === 9) {
+    }
+    if (formatted.startsWith('07') && formatted.length === 10) {
+      return '254' + formatted.substring(1);
+    }
+    if (formatted.startsWith('7') && formatted.length === 9) {
       return '254' + formatted;
     }
-    return formatted;
+    return formatted; // Let validation catch invalid numbers
   };
 
   const handlePayment = async () => {
-    // Validate phone number
-    const phoneRegex = /^0[17]\d{8}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      setError('Please enter a valid Safaricom number (e.g. 0712345678)');
+    // Validate phone number - accept +254..., 254..., or 07...
+    const phoneRegex = /^(?:\+?254|0)[17]\d{8}$/;
+    const testNumber = phoneNumber.trim();
+    
+    if (!phoneRegex.test(testNumber)) {
+      setError('Please enter a valid Safaricom number (e.g. 0712345678, 254712345678, or +254712345678)');
       return;
     }
 
-    const formattedPhone = formatPhoneNumber(phoneNumber);
+    const formattedPhone = formatPhoneNumber(testNumber);
+    // Additional validation for the formatted number
+    if (formattedPhone.length !== 12 || !formattedPhone.startsWith('254')) {
+      setError('Invalid phone number format after conversion');
+      return;
+    }
+
     const amount = packagePrices[selectedPackage];
     setIsProcessing(true);
     setError(null);
 
     try {
-      // 1. Check backend health first
-      const healthResponse = await fetch(`${API_BASE_URL}/api/health`, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
+      const healthResponse = await fetch(`${API_BASE_URL}/api/health`);
       if (!healthResponse.ok) {
         throw new Error('Backend service is not available');
       }
 
-      // 2. Initiate payment
       const paymentResponse = await fetch(`${API_BASE_URL}/api/payment`, {
         method: 'POST',
         headers: {
@@ -74,16 +79,8 @@ const Packages = () => {
           phone: formattedPhone,
           amount,
           package: selectedPackage,
-          timestamp: new Date().toISOString(),
         }),
       });
-
-      // Handle response
-      const contentType = paymentResponse.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await paymentResponse.text();
-        throw new Error(`Unexpected response: ${text.substring(0, 100)}`);
-      }
 
       const responseData = await paymentResponse.json();
 
@@ -91,14 +88,12 @@ const Packages = () => {
         throw new Error(responseData.message || 'Payment request failed');
       }
 
-      // Success case
       alert(`Payment request sent to ${formattedPhone}. Complete payment on your phone`);
       setIsModalOpen(false);
       setPhoneNumber('');
 
     } catch (err) {
       console.error('Payment Error:', err);
-      
       let errorMessage = err.message;
       if (err.message.includes('Failed to fetch')) {
         errorMessage = 'Cannot connect to the payment service. Please check:';
@@ -106,7 +101,6 @@ const Packages = () => {
         errorMessage += '\n2. That the backend server is running';
         errorMessage += '\n3. That you have CORS enabled on the backend';
       }
-
       setError(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -148,9 +142,9 @@ const Packages = () => {
                 setPhoneNumber(e.target.value);
                 setError(null);
               }}
-              placeholder="e.g. 0712345678"
+              placeholder="e.g. 0712345678, 254712345678, or +254712345678"
               disabled={isProcessing}
-              maxLength="10"
+              maxLength="13"
             />
             
             <p className="amount-display">

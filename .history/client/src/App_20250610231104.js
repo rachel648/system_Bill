@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ServiceForm from './components/ServiceForm';
@@ -8,6 +7,19 @@ import Receipts from './Receipts';
 import Navigation from './Navigation';
 import './App.css';
 import Admin from './admin';
+import axios from 'axios';
+
+// Set axios defaults for API calls
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+
+// Add axios interceptor for error handling
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 const App = () => {
   const [isSidebarVisible, setSidebarVisible] = useState(true);
@@ -19,7 +31,7 @@ const App = () => {
   const Layout = ({ children }) => (
     <div className="app-container">
       <Navigation isVisible={isSidebarVisible} toggle={toggleSidebar} />
-      <div className="main-content">
+      <div className={`main-content ${!isSidebarVisible ? 'expanded' : ''}`}>
         {children}
       </div>
     </div>
@@ -39,6 +51,9 @@ const App = () => {
 
         {/* Admin page without sidebar */}
         <Route path="/admin" element={<Admin />} />
+
+        {/* 404 handling */}
+        <Route path="*" element={<Layout><div>Page Not Found</div></Layout>} />
       </Routes>
     </Router>
   );

@@ -33,45 +33,50 @@ const Hotspot = () => {
   };
 
   const handleConfirmPayment = async () => {
-  if (!phoneNumber) {
-    alert("Please enter your phone number");
-    return;
-  }
-
-  setIsLoading(true);
-  setPaymentStatus(null);
-
-  try {
-    // Format phone number
-    let formattedPhone = phoneNumber.trim();
-    if (formattedPhone.startsWith('0')) {
-      formattedPhone = '254' + formattedPhone.substring(1);
-    } else if (formattedPhone.startsWith('+254')) {
-      formattedPhone = formattedPhone.substring(1);
+    if (!phoneNumber) {
+      alert("Please enter your phone number");
+      return;
     }
 
-    const response = await axios.post('/api/hotspot/stk-push', {
-      phoneNumber: formattedPhone,
-      amount: totalAmount,
-      hours: hours
-    });
+    setIsLoading(true);
+    setPaymentStatus(null);
 
-    if (response.data.success) {
-      setPaymentStatus('success');
-      alert(`STK Push sent to ${formattedPhone}. Please complete payment on your phone.`);
-    } else {
+    try {
+      // Format phone number to 2547XXXXXXXX
+      let formattedPhone = phoneNumber.trim();
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '254' + formattedPhone.substring(1);
+      } else if (formattedPhone.startsWith('+254')) {
+        formattedPhone = formattedPhone.substring(1);
+      }
+
+      const payload = {
+        phoneNumber: formattedPhone,
+        amount: totalAmount,
+        hours: hours,
+        accountReference: `HOTSPOT-${Date.now()}`,
+        transactionDesc: `Hotspot access for ${hours} hour(s)`
+      };
+
+      const response = await axios.post('/mpesa/stk-push', payload);
+
+      if (response.data.success) {
+        setPaymentStatus('success');
+        alert(`STK Push sent to ${formattedPhone}. Please complete the payment on your phone.`);
+      } else {
+        setPaymentStatus('error');
+        alert(`Failed to initiate payment: ${response.data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
       setPaymentStatus('error');
-      alert(response.data.message || 'Payment initiation failed');
+      alert('An error occurred while initiating payment. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setShowModal(false);
     }
-  } catch (error) {
-    console.error('Payment error:', error);
-    setPaymentStatus('error');
-    alert(error.response?.data?.message || 'Payment failed. Please try again.');
-  } finally {
-    setIsLoading(false);
-    setShowModal(false);
-  }
-};
+  };
+
   return (
     <div className="hotspot-container">
       <h2>Hotspot Internet Payment</h2>
