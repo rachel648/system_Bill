@@ -1,27 +1,47 @@
-const express = require('express');
-const cors = require('cors');
-const { stkPush, healthCheck } = require('./mpesa');
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ServiceForm from './components/ServiceForm';
+import Packages from './Packages';
+import Hotspot from './Hotspot';
+import Receipts from './Receipts';
+import Navigation from './Navigation';
+import './App.css';
+import Admin from './admin';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const App = () => {
+  const [isSidebarVisible, setSidebarVisible] = useState(true);
 
-// Routes
-app.get('/health', healthCheck);
-app.post('/api/mpesa/payment', stkPush);
+  const toggleSidebar = () => {
+    setSidebarVisible(prev => !prev);
+  };
 
-// Simple callback handler for testing
-app.post('/mpesa-callback', (req, res) => {
-  console.log('M-Pesa Callback:', req.body);
-  res.status(200).json({ status: 'received' });
-});
+  const Layout = ({ children }) => (
+    <div className="app-container">
+      <Navigation isVisible={isSidebarVisible} toggle={toggleSidebar} />
+      <div className="main-content">
+        {children}
+      </div>
+    </div>
+  );
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`M-Pesa Environment: ${process.env.MPESA_ENVIRONMENT || 'sandbox'}`);
-});
+  return (
+    <Router>
+      <Routes>
+        {/* Redirect root to /packages */}
+        <Route path="/" element={<Navigate to="/packages" replace />} />
+
+        {/* Main pages with sidebar layout */}
+        <Route path="/packages" element={<Layout><Packages /></Layout>} />
+        <Route path="/hotspot" element={<Layout><Hotspot /></Layout>} />
+        <Route path="/receipts" element={<Layout><Receipts /></Layout>} />
+        <Route path="/service" element={<Layout><ServiceForm /></Layout>} />
+
+        {/* Admin page without sidebar */}
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;

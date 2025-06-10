@@ -8,32 +8,38 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
-// Middleware
+// ===== Middleware =====
 app.use(cors({
-  origin: 'http://localhost:3000',  // Change if frontend hosted elsewhere
+  origin: 'http://localhost:3000', // Update for production
   credentials: true
 }));
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(express.static('public')); // Serve static files
 
-// Serve static files
-app.use(express.static('public'));
-
-// Routes
+// ===== Routes =====
 app.use('/api/users', userRoutes);
 
-// ✅ M-Pesa Access Token Generator
+// ===== M-Pesa Access Token Generator =====
 const generateAccessToken = async () => {
-  const auth = Buffer.from(`${process.env.CONSUMER_KEY}:${process.env.CONSUMER_SECRET}`).toString('base64');
-  const response = await axios.get('https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
-    headers: {
-      Authorization: `Basic ${auth}`
-    }
-  });
-  return response.data.access_token;
+  try {
+    const auth = Buffer.from(`${process.env.CONSUMER_KEY}:${process.env.CONSUMER_SECRET}`).toString('base64');
+    const response = await axios.get(
+      'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+      {
+        headers: {
+          Authorization: `Basic ${auth}`
+        }
+      }
+    );
+    return response.data.access_token;
+  } catch (err) {
+    console.error('❌ Failed to generate access token:', err.response?.data || err.message);
+    throw err;
+  }
 };
 
-// ✅ M-Pesa Payment Route
+// ===== M-Pesa STK Push Route =====
 app.post('/api/payment', async (req, res) => {
   const { phone, amount, package } = req.body;
 
@@ -49,7 +55,7 @@ app.post('/api/payment', async (req, res) => {
       process.env.MPESA_SHORTCODE + process.env.MPESA_PASSKEY + timestamp
     ).toString('base64');
 
-    const response = await axios.post(
+    const stkResponse = await axios.post(
       'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
       {
         BusinessShortCode: process.env.MPESA_SHORTCODE,
@@ -73,10 +79,11 @@ app.post('/api/payment', async (req, res) => {
 
     res.status(200).json({
       message: 'STK Push request sent successfully',
-      data: response.data
+      data: stkResponse.data
     });
+
   } catch (error) {
-    console.error('M-Pesa error:', error.response?.data || error.message);
+    console.error('❌ M-Pesa STK Push error:', error.response?.data || error.message);
     res.status(500).json({
       message: 'M-Pesa STK push failed',
       error: error.response?.data || error.message
@@ -84,7 +91,7 @@ app.post('/api/payment', async (req, res) => {
   }
 });
 
-// ✅ Health Check
+// ===== Health Check =====
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -93,7 +100,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ✅ Database Connection
+// ===== Database Connection =====
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
@@ -101,17 +108,22 @@ const connectDB = async () => {
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000
     });
+
     console.log('✅ MongoDB connected successfully');
 
-    await mongoose.connection.db.collection('users').createIndex({ username: 1 }, { unique: true });
-    console.log('✅ Database indexes created');
+    await mongoose.connection.db.collection('users').createIndex(
+      { username: 1 },
+      { unique: true }
+    );
+    console.log('✅ Unique index on users.username created');
+
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
     process.exit(1);
   }
 };
 
-// ✅ Start Server
+// ===== Start Server =====
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   app.listen(PORT, () => {
@@ -120,7 +132,8 @@ connectDB().then(() => {
   });
 });
 
+// ===== Unhandled Promise Rejection Handler =====
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection:', err);
+  console.error('❌ Unhandled rejection:', err);
   process.exit(1);
 });
