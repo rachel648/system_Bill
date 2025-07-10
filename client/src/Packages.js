@@ -3,10 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import './Packages.css';
 
 const packagePrices = {
-  Basic: 1500,
-  Intermediate: 2000,
-  Big: 3000,
-  Mega: 6000,
+  Basic: 10,
+  Intermediate: 20,
+  Big: 30,
+  Mega: 40,
+  Super: 50,
+  DayOffer: 80
+};
+
+// Add duration for each package
+const packageDurations = {
+  Basic: '/ Hour',
+  Intermediate: '/ 2 Hours',
+  Big: '/ 3 Hours',
+  Mega: '/ 4 Hours',
+  Super: '/ 5 Hours',
+  DayOffer: '24 Hours (Full Day)'
 };
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -109,7 +121,16 @@ const Packages = () => {
 
   return (
     <div className="container">
-      <h2 className="heading">Select Your Package</h2>
+      <div className="header-container">
+        <div className="logo-container">
+          <div className="animated-logo">
+            <div className="logo-circle"></div>
+            <div className="logo-pulse"></div>
+          </div>
+        </div>
+        <h1 className="heading">WELCOME TO ELITE NETWORKS HOTSPOT</h1>
+      </div>
+      <h3 className="heading">Select Your Package</h3>
 
       <button
         onClick={() => navigate('/service')}
@@ -123,8 +144,8 @@ const Packages = () => {
         {Object.keys(packagePrices).map((pkg) => (
           <div key={pkg} className={`card ${pkg.toLowerCase()}-card`} onClick={() => handleCardClick(pkg)}>
             <h3>{pkg}</h3>
-            <p>KSh {packagePrices[pkg].toLocaleString()}/month</p>
-            <p>{pkg === 'Basic' ? '7' : pkg === 'Intermediate' ? '10' : pkg === 'Big' ? '12' : '20'} Mbps</p>
+            <p>KSh {packagePrices[pkg].toLocaleString()} {packageDurations[pkg]}</p>
+            <p>{pkg === 'Basic' ? '5' : pkg === 'Intermediate' ? '5' : pkg === 'Big' ? '5' : '5'} Mbps</p>
           </div>
         ))}
       </div>

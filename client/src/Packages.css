@@ -12,6 +12,72 @@
   font-size: 2.2rem;
 }
 
+/* Logo styles */
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.logo-container {
+  position: absolute;
+  left: 20px;
+}
+
+.animated-logo {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+/* Option 1: CSS-only logo (animated) */
+.logo-circle {
+  width: 50px;
+  height: 50px;
+  background-color: #4a6bff;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(74, 107, 255, 0.7);
+}
+
+.logo-pulse {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background-color: rgba(74, 107, 255, 0.4);
+  border-radius: 50%;
+  z-index: 1;
+  animation: pulse 2s infinite;
+}
+
+/* Option 2: Image logo - uncomment this and comment the CSS logo above to use an image */
+/*
+.logo-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  animation: pulse 1.5s infinite alternate;
+}
+*/
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+}
+
 /* Service form button */
 .service-form-button {
   background: linear-gradient(135deg, #3498db, #2c3e50);
@@ -83,6 +149,12 @@
 
 .mega-card {
   background: linear-gradient(135deg, #00c6ff, #0072ff);
+}
+.super-card {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+}
+.dayoffer-card {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
 }
 
 .card:hover {
@@ -248,6 +320,25 @@ input[type="tel"]:focus {
   .modal-buttons button {
     max-width: 100%;
   }
+
+  .logo-container {
+    left: 10px;
+  }
+
+  .animated-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .logo-circle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .logo-pulse {
+    width: 50px;
+    height: 50px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -257,5 +348,15 @@ input[type="tel"]:focus {
   
   .heading {
     font-size: 1.8rem;
+  }
+
+  .logo-container {
+    position: static;
+    margin-right: 10px;
+  }
+
+  .header-container {
+    justify-content: flex-start;
+    padding-left: 15px;
   }
 }
