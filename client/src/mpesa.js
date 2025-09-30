@@ -8,7 +8,7 @@ const BASE_URL = MPESA_ENVIRONMENT === 'production'
   ? 'https://api.safaricom.co.ke' 
   : 'https://sandbox.safaricom.co.ke';
 
-const MPESA_SHORTCODE = process.env.MPESA_SHORTCODE || '174379';
+const MPESA_SHORTCODE = process.env.MPESA_SHORTCODE || '8532425';
 const MPESA_PASSKEY = process.env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
 const MPESA_CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY || 'qugWDUS22ly2srv9LGCPGQbJEgCBBoh3VUPYhqeBzcnohU4K';
 const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || 'dAF0Drk6t8WgG0FcWmsgSnyB1oiZ0juK4euuVv5di0Gf414KGeWBQKII1RWPVf3k';
@@ -65,7 +65,7 @@ const stkPush = async (req, res) => {
       TransactionType: 'CustomerPayBillOnline',
       Amount: amount,
       PartyA: phone,
-      PartyB: 174379, // M-Pesa Paybill number
+      PartyB: 8532425, // M-Pesa Paybill number
       PhoneNumber: phone,
       CallBackURL: https://f646-105-163-157-62.ngrok-free.app/callback,
       AccountReference: `NET-${packageName}`,
