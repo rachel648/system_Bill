@@ -13,7 +13,6 @@ const MPESA_PASSKEY = process.env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a4
 const MPESA_CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY || 'qugWDUS22ly2srv9LGCPGQbJEgCBBoh3VUPYhqeBzcnohU4K';
 const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || 'dAF0Drk6t8WgG0FcWmsgSnyB1oiZ0juK4euuVv5di0Gf414KGeWBQKII1RWPVf3k';
 const CALLBACK_URL = process.env.CALLBACK_URL || 'https://your-ngrok-url.ngrok-free.app/callback';
-const BASE_URL = 'https://sandbox.safaricom.co.ke';
 
 // Generate Access Token
 const generateToken = async () => {
