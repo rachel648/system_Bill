@@ -1,67 +1,61 @@
-/* Main container */
-.container {
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.packages-container {
   max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
   padding: 20px;
-}
-
-.heading {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 30px;
-  font-size: 2.2rem;
-}
-
-/* Logo styles */
-.header-container {
+  margin: 0 auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  position: relative;
+}
+
+/* Header Styles */
+.header-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 20px;
 }
 
 .logo-container {
-  position: absolute;
-  left: 20px;
+  margin-bottom: 15px;
 }
 
 .animated-logo {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Option 1: CSS-only logo (animated) */
 .logo-circle {
-  width: 50px;
-  height: 50px;
-  background-color: #4a6bff;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  position: absolute;
-  z-index: 2;
-  box-shadow: 0 0 10px rgba(74, 107, 255, 0.7);
+  background-color: #4a90e2;
+  position: relative;
+  z-index: 1;
 }
 
 .logo-pulse {
   position: absolute;
-  width: 60px;
-  height: 60px;
-  background-color: rgba(74, 107, 255, 0.4);
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  z-index: 1;
+  background-color: rgba(74, 144, 226, 0.4);
   animation: pulse 2s infinite;
 }
-
-/* Option 2: Image logo - uncomment this and comment the CSS logo above to use an image */
-/*
-.logo-image {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  animation: pulse 1.5s infinite alternate;
-}
-*/
 
 @keyframes pulse {
   0% {
@@ -70,25 +64,51 @@
   }
   70% {
     transform: scale(1.1);
-    opacity: 0.4;
+    opacity: 0.3;
   }
   100% {
     transform: scale(0.8);
-    opacity: 0.4;
+    opacity: 0.7;
   }
 }
 
-/* Service form button */
+.heading {
+  font-size: 2.2rem;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: 700;
+}
+
+.main-heading {
+  font-size: 1.2rem;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 5px;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.sub-heading {
+  font-size: 1rem;
+  color: #444;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* Service Form Button */
 .service-form-button {
   background: linear-gradient(135deg, #3498db, #2c3e50);
   color: white;
   border: none;
   border-radius: 6px;
   padding: 12px 24px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .service-form-button:hover {
@@ -96,23 +116,21 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Cards container */
-.card-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+/* Packages Grid */
+.packages-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 25px;
   padding: 20px;
   margin-top: 30px;
 }
 
-/* Card styles */
-.card {
+.package-card {
   padding: 25px;
   cursor: pointer;
   border-radius: 15px;
   text-align: center;
-  width: 250px;
   color: white;
   font-weight: bold;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -122,19 +140,31 @@
   align-items: center;
   justify-content: space-between;
   min-height: 180px;
+  position: relative;
+  overflow: hidden;
 }
 
-.card h3 {
+.package-name {
   font-size: 1.5rem;
   margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
 }
 
-.card p {
+.package-price {
   font-size: 1.1rem;
-  margin: 8px 0;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Package-specific colors */
+.package-speed {
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Package Card Gradients */
 .basic-card {
   background: linear-gradient(135deg, #6a11cb, #2575fc);
 }
@@ -150,20 +180,22 @@
 .mega-card {
   background: linear-gradient(135deg, #00c6ff, #0072ff);
 }
+
 .super-card {
   background: linear-gradient(135deg, #ff416c, #ff4b2b);
 }
+
 .dayoffer-card {
   background: linear-gradient(135deg, #f7971e, #ffd200);
 }
 
-.card:hover {
+.package-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Modal styles */
-.modal {
+/* Modal Styles */
+.payment-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -185,16 +217,17 @@
   max-width: 400px;
   text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative; /* Added for close button positioning */
 }
 
-.modal-content h3 {
+.modal-title {
+  font-size: 1.5rem;
   color: #2c3e50;
   margin-bottom: 20px;
-  font-size: 1.5rem;
 }
 
 /* Input styles */
-input[type="tel"] {
+.modal-input {
   width: 100%;
   padding: 12px 15px;
   margin: 15px 0;
@@ -204,7 +237,7 @@ input[type="tel"] {
   transition: border 0.3s ease;
 }
 
-input[type="tel"]:focus {
+.modal-input:focus {
   border-color: #3498db;
   outline: none;
 }
@@ -228,7 +261,7 @@ input[type="tel"]:focus {
   margin-top: 20px;
 }
 
-.modal-buttons button {
+.payment-button, .cancel-button {
   padding: 12px 25px;
   border: none;
   border-radius: 8px;
@@ -240,26 +273,26 @@ input[type="tel"]:focus {
   max-width: 150px;
 }
 
-.modal-buttons button:first-child {
+.payment-button {
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
 }
 
-.modal-buttons button:first-child:hover {
+.payment-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #27ae60, #219653);
   transform: translateY(-2px);
 }
 
-.modal-buttons button:last-child {
+.cancel-button {
   background: #f1f1f1;
   color: #555;
 }
 
-.modal-buttons button:last-child:hover {
+.cancel-button:hover:not(:disabled) {
   background: #e0e0e0;
 }
 
-.modal-buttons button:disabled {
+.payment-button:disabled, .cancel-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none !important;
@@ -277,7 +310,48 @@ input[type="tel"]:focus {
   border-left: 4px solid #e74c3c;
 }
 
-/* Loading spinner */
+/* Success message (Added) */
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 8px; /* Changed from 4px to match other messages */
+  margin: 15px 0;
+  border: 1px solid #c3e6cb;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Modal close button (Added) */
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+  z-index: 1;
+}
+
+.modal-close-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Spinner Animation */
 .spinner {
   display: inline-block;
   width: 16px;
@@ -296,20 +370,28 @@ input[type="tel"]:focus {
   }
 }
 
-/* Responsive design */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .card-container {
+  .heading {
+    font-size: 1.8rem;
+  }
+  
+  .packages-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
   }
   
-  .card {
-    width: calc(50% - 20px);
-    min-width: 150px;
-    padding: 20px 10px;
+  .package-card {
+    padding: 20px 15px;
+    min-height: 160px;
+  }
+  
+  .package-name {
+    font-size: 1.3rem;
   }
   
   .modal-content {
-    padding: 20px;
+    padding: 25px 20px; /* Adjusted for close button */
   }
   
   .modal-buttons {
@@ -317,46 +399,25 @@ input[type="tel"]:focus {
     gap: 10px;
   }
   
-  .modal-buttons button {
+  .payment-button, .cancel-button {
     max-width: 100%;
-  }
-
-  .logo-container {
-    left: 10px;
-  }
-
-  .animated-logo {
-    width: 50px;
-    height: 50px;
-  }
-
-  .logo-circle {
-    width: 40px;
-    height: 40px;
-  }
-
-  .logo-pulse {
-    width: 50px;
-    height: 50px;
   }
 }
 
 @media (max-width: 480px) {
-  .card {
-    width: 100%;
+  .heading {
+    font-size: 1.6rem;
   }
   
-  .heading {
-    font-size: 1.8rem;
+  .packages-grid {
+    grid-template-columns: 1fr;
   }
-
-  .logo-container {
-    position: static;
-    margin-right: 10px;
+  
+  .package-card {
+    min-height: 140px;
   }
-
-  .header-container {
-    justify-content: flex-start;
-    padding-left: 15px;
+  
+  .modal-content {
+    padding: 20px 15px; /* Adjusted for close button */
   }
 }

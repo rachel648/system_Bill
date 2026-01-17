@@ -5,23 +5,32 @@ import Packages from './Packages';
 import Hotspot from './Hotspot';
 import Receipts from './Receipts';
 import Navigation from './Navigation';
+import AdminDashboard from './components/AdminDashboard'; // Import AdminDashboard
 import './App.css';
-import Admin from './admin';
 import axios from 'axios';
 
 // Set axios defaults for API calls
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const App = () => {
-  const [isSidebarVisible, setSidebarVisible] = useState(true);
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarVisible(prev => !prev);
   };
 
+  // Function to close sidebar when a navigation item is clicked
+  const handleNavigationClick = () => {
+    setSidebarVisible(false);
+  };
+
   const Layout = ({ children }) => (
     <div className="app-container">
-      <Navigation isVisible={isSidebarVisible} toggle={toggleSidebar} />
+      <Navigation 
+        isVisible={isSidebarVisible} 
+        toggle={toggleSidebar} 
+        onItemClick={handleNavigationClick} 
+      />
       <div className="main-content">
         {children}
       </div>
@@ -41,7 +50,7 @@ const App = () => {
         <Route path="/service" element={<Layout><ServiceForm /></Layout>} />
 
         {/* Admin page without sidebar */}
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

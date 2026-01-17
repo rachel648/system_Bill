@@ -10,6 +10,12 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
+// ===== Set default JWT secret if not in .env =====
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'elite_networks_sandbox_key';
+  console.log('⚠️  Using default JWT secret for development');
+}
+
 // ===== Middleware =====
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -77,7 +83,7 @@ const authenticateAdmin = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'admin_secret_key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.admin = decoded;
     next();
   } catch (err) {
@@ -88,7 +94,7 @@ const authenticateAdmin = (req, res, next) => {
 // ===== Routes =====
 app.use('/api/users', userRoutes);
 
-// ===== Admin Routes =====
+// ===== Admin Login =====
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -97,6 +103,58 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(400).json({ message: 'Username and password required' });
     }
 
+    // Check if it's the default admin
+    if (username === 'admin' && password === 'admin') {
+      const admin = await Admin.findOne({ username: 'admin' });
+      if (!admin) {
+        // Create admin if doesn't exist
+        const hashedPassword = await bcrypt.hash('admin', 10);
+        const newAdmin = await Admin.create({
+          username: 'admin',
+          password: hashedPassword
+        });
+        
+        const token = jwt.sign(
+          { id: newAdmin._id, username: newAdmin.username, role: 'admin' },
+          process.env.JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        return res.json({
+          success: true,
+          token,
+          admin: {
+            id: newAdmin._id,
+            username: newAdmin.username,
+            role: newAdmin.role
+          }
+        });
+      }
+      
+      // Verify existing admin password
+      const isValidPassword = await bcrypt.compare(password, admin.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      const token = jwt.sign(
+        { id: admin._id, username: admin.username, role: 'admin' },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      return res.json({
+        success: true,
+        token,
+        admin: {
+          id: admin._id,
+          username: admin.username,
+          role: admin.role
+        }
+      });
+    }
+
+    // Check for other admin users
     const admin = await Admin.findOne({ username });
     if (!admin) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -109,7 +167,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: admin._id, username: admin.username, role: 'admin' },
-      process.env.JWT_SECRET || 'admin_secret_key',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -137,7 +195,6 @@ app.get('/api/admin/payments', authenticateAdmin, async (req, res) => {
       let isCurrentlyActive = false;
       let remainingTime = 0;
       
-      // Only calculate for completed payments with endTime
       if (payment.status === 'completed' && payment.endTime) {
         const now = new Date();
         const end = new Date(payment.endTime);
@@ -166,7 +223,6 @@ app.get('/api/admin/payments', authenticateAdmin, async (req, res) => {
 app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
   try {
     const totalPayments = await Payment.countDocuments();
-    const completedPayments = await Payment.countDocuments({ status: 'completed' });
     const totalRevenue = await Payment.aggregate([
       { $match: { status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -187,9 +243,6 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
       success: true,
       stats: {
         totalPayments,
-        completedPayments,
-        failedPayments: await Payment.countDocuments({ status: 'failed' }),
-        cancelledPayments: await Payment.countDocuments({ status: 'cancelled' }),
         totalRevenue: totalRevenue[0]?.total || 0,
         activePayments,
         todaysPayments
@@ -257,7 +310,7 @@ app.post('/api/payment', async (req, res) => {
         PartyA: phone,
         PartyB: process.env.MPESA_SHORTCODE,
         PhoneNumber: phone,
-        CallBackURL: `${process.env.MPESA_CALLBACK_URL}`,
+        CallBackURL: process.env.MPESA_CALLBACK_URL,
         AccountReference: `ELITE-${package}`,
         TransactionDesc: `Payment for ${package} package`
       },
@@ -282,20 +335,6 @@ app.post('/api/payment', async (req, res) => {
 
   } catch (error) {
     console.error('❌ M-Pesa STK Push error:', error.response?.data || error.message);
-    
-    // Update payment status to failed if it exists
-    try {
-      const payment = await Payment.findOne({ phoneNumber: phone, status: 'pending' })
-        .sort({ createdAt: -1 });
-      if (payment) {
-        payment.status = 'failed';
-        payment.resultDesc = 'STK Push request failed';
-        await payment.save();
-      }
-    } catch (dbErr) {
-      console.error('Error updating payment status:', dbErr);
-    }
-
     res.status(500).json({
       success: false,
       message: 'M-Pesa STK push failed',
@@ -304,11 +343,11 @@ app.post('/api/payment', async (req, res) => {
   }
 });
 
-// ===== M-Pesa Callback Handler - IMPROVED =====
+// ===== M-Pesa Callback Handler =====
 app.post('/callback', async (req, res) => {
   try {
     const callbackData = req.body;
-    console.log('📱 M-Pesa Callback received:', JSON.stringify(callbackData, null, 2));
+    console.log('📱 M-Pesa Callback received');
 
     if (!callbackData.Body || !callbackData.Body.stkCallback) {
       console.log('⚠️ Invalid callback format');
@@ -335,8 +374,6 @@ app.post('/callback', async (req, res) => {
       // Payment successful
       const items = stkCallback.CallbackMetadata?.Item || [];
       let mpesaCode = 'N/A';
-      let phoneNumber = payment.phoneNumber;
-      let amount = payment.amount;
 
       // Extract M-Pesa code
       const mpesaReceiptItem = items.find(item => item.Name === 'MpesaReceiptNumber');
@@ -344,22 +381,8 @@ app.post('/callback', async (req, res) => {
         mpesaCode = mpesaReceiptItem.Value;
       }
 
-      // Extract phone number from callback if available
-      const phoneItem = items.find(item => item.Name === 'PhoneNumber');
-      if (phoneItem && phoneItem.Value) {
-        phoneNumber = phoneItem.Value.toString();
-      }
-
-      // Extract amount from callback if available
-      const amountItem = items.find(item => item.Name === 'Amount');
-      if (amountItem && amountItem.Value) {
-        amount = amountItem.Value;
-      }
-
       payment.status = 'completed';
       payment.mpesaCode = mpesaCode;
-      payment.phoneNumber = phoneNumber;
-      payment.amount = amount;
       
       // Calculate end time based on package duration
       const packageDurations = {
@@ -376,7 +399,7 @@ app.post('/callback', async (req, res) => {
       payment.endTime = new Date(Date.now() + (durationHours * 60 * 60 * 1000));
       
       await payment.save();
-      console.log(`✅ Payment completed for ${payment.phoneNumber}, M-Pesa Code: ${payment.mpesaCode}, Amount: KSh ${payment.amount}`);
+      console.log(`✅ Payment completed for ${payment.phoneNumber}, M-Pesa Code: ${payment.mpesaCode}`);
       
     } else if (resultCode === 1032) {
       // User cancelled the payment
@@ -384,23 +407,11 @@ app.post('/callback', async (req, res) => {
       await payment.save();
       console.log(`❌ Payment cancelled by user: ${payment.phoneNumber}`);
       
-    } else if (resultCode === 1037) {
-      // Request timeout
-      payment.status = 'failed';
-      await payment.save();
-      console.log(`⏰ Payment timeout: ${payment.phoneNumber}`);
-      
-    } else if (resultCode === 2001) {
-      // Insufficient balance
-      payment.status = 'failed';
-      await payment.save();
-      console.log(`💰 Insufficient balance: ${payment.phoneNumber}`);
-      
     } else {
       // Other errors
       payment.status = 'failed';
       await payment.save();
-      console.log(`❌ Payment failed: ${payment.phoneNumber}, Code: ${resultCode}, Desc: ${stkCallback.ResultDesc}`);
+      console.log(`❌ Payment failed: ${payment.phoneNumber}, Code: ${resultCode}`);
     }
 
     res.json({ ResultCode: 0, ResultDesc: "Success" });
@@ -416,48 +427,23 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date(),
-    dbStatus: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    mpesaCallbackUrl: process.env.MPESA_CALLBACK_URL
+    dbStatus: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
 
-// ===== Test Callback Endpoint (for debugging) =====
-app.post('/api/test-callback', async (req, res) => {
-  console.log('🧪 Test callback received:', req.body);
-  res.json({ message: 'Test callback received', data: req.body });
-});
-
-// ===== Manual Payment Status Update (for testing) =====
-app.post('/api/payment/:id/status', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, mpesaCode } = req.body;
-    
-    const payment = await Payment.findById(id);
-    if (!payment) {
-      return res.status(404).json({ message: 'Payment not found' });
-    }
-    
-    payment.status = status;
-    if (mpesaCode) payment.mpesaCode = mpesaCode;
-    
-    if (status === 'completed') {
-      const packageDurations = {
-        'Basic': 1, 'Intermediate': 2, 'Big': 3, 
-        'Mega': 4, 'Super': 5, 'DayOffer': 24
-      };
-      const durationHours = packageDurations[payment.package] || 1;
-      payment.startTime = new Date();
-      payment.endTime = new Date(Date.now() + (durationHours * 60 * 60 * 1000));
-    }
-    
-    await payment.save();
-    
-    res.json({ success: true, payment });
-  } catch (err) {
-    console.error('Error updating payment:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
+// ===== Test Endpoint =====
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Elite Networks Hotspot API',
+    version: '1.0.0',
+    endpoints: [
+      'POST /api/payment - Make payment',
+      'POST /api/admin/login - Admin login',
+      'GET /api/admin/payments - Get payments (admin)',
+      'GET /api/admin/stats - Get stats (admin)',
+      'GET /api/health - Health check'
+    ]
+  });
 });
 
 // ===== Database Connection =====
@@ -498,7 +484,8 @@ connectDB().then(() => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🔗 http://localhost:${PORT}`);
     console.log(`📱 M-Pesa Callback URL: ${process.env.MPESA_CALLBACK_URL}`);
-    console.log('📊 Admin Dashboard: http://localhost:3000/service (login with admin/admin)');
+    console.log('📊 Admin Dashboard: http://localhost:3000/service');
+    console.log('🔑 Admin login: username=admin, password=admin');
   });
 });
 
